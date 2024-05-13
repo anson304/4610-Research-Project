@@ -25,6 +25,7 @@ public:
 
 	void Split(const MatrixD& V);
 	void BuildConnection();
+	void PrintNodes();
 	void ConnectTree(Octree* l, Octree* r, int dim);
 	void ConnectEmptyTree(Octree* l, Octree* r, int dim);
 
@@ -44,6 +45,7 @@ public:
 	int number_;
 	int occupied_;
 	int exterior_;
+	int node_id;
 
 	Octree* children_[8];
 	Octree* connection_[6];

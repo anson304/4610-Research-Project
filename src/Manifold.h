@@ -14,6 +14,7 @@ public:
 
 protected:
 	void BuildTree(int resolution);
+	void VerifyTree();
 	void CalcBoundingBox();
 	void ConstructManifold();
 	bool SplitGrid(const std::vector<Vector4i>& nface_indices,

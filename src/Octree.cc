@@ -53,6 +53,7 @@ Octree::Octree(const Vector3& min_c, const Vector3& volume_size)
 	number_ = 1;
 	occupied_ = 1;
 	exterior_ = 0;
+	node_id = 0;
 
 	min_corner_ = min_c;
 	volume_size_ = volume_size;
@@ -108,6 +109,31 @@ bool Octree::Intersection(int Find_ex, const Vector3& min_corner,
 	return TriBoxOverlap(boxcenter, boxhalfsize, triverts);
 }
 
+void Octree::PrintNodes() {
+	if (occupied_ != 0) {
+		int connection0 = connection_[0] ? connection_[0]->node_id : -1;
+		int connection1 = connection_[1] ? connection_[1]->node_id : -1;
+		int connection2 = connection_[2] ? connection_[2]->node_id : -1;
+		int connection3 = connection_[3] ? connection_[3]->node_id : -1;
+		int connection4 = connection_[4] ? connection_[4]->node_id : -1;
+		int connection5 = connection_[5] ? connection_[5]->node_id : -1;
+		int empty_connection0 = empty_connection_[0] ? empty_connection_[0]->node_id : -1;
+		int empty_connection1 = empty_connection_[1] ? empty_connection_[1]->node_id : -1;
+		int empty_connection2 = empty_connection_[2] ? empty_connection_[2]->node_id : -1;
+		int empty_connection3 = empty_connection_[3] ? empty_connection_[3]->node_id : -1;
+		int empty_connection4 = empty_connection_[4] ? empty_connection_[4]->node_id : -1;
+		int empty_connection5 = empty_connection_[5] ? empty_connection_[5]->node_id : -1;
+		printf("node %d connection %d %d %d %d %d %d empty connection %d %d %d %d %d %d\n", node_id, connection0, connection1, connection2, connection3, connection4, connection5, empty_connection0, empty_connection1, empty_connection2, empty_connection3, empty_connection4, empty_connection5);
+	
+		for (int i = 0; i < 6; ++i)
+		{	
+			if (children_[i]) {
+				children_[i]->PrintNodes();
+			}
+		}
+	}
+}
+
 void Octree::Split(const MatrixD& V)
 {
 	level_ += 1;
@@ -142,6 +168,7 @@ void Octree::Split(const MatrixD& V)
 				children_[ind] = new Octree(startpoint, halfsize);
 				children_[ind]->occupied_ = 0;
 				children_[ind]->number_ = 0;
+				children_[ind]->node_id = node_id * 8 + 1 + ind;
 
 				for (int face = 0; face < (int)F_.size(); ++face) {
 					if (Intersection(face, startpoint, halfsize, V)) {

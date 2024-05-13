@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 
 #include "MeshProjector.h"
+#include <sys/time.h> //gettimeofday()
 
 Manifold::Manifold()
 	: tree_(0)
@@ -16,13 +17,29 @@ Manifold::~Manifold()
 	tree_ = 0;
 }
 
+static double Wtime() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return(1.0*tv.tv_sec + 1.0e-6*tv.tv_usec);
+}
+
+void Manifold::VerifyTree() {
+	tree_->PrintNodes();
+
+}
+
 void Manifold::ProcessManifold(const MatrixD& V, const MatrixI& F,
 	int depth, MatrixD* out_V, MatrixI* out_F)
 {
 	V_ = V;
 	F_ = F;
-
+	printf("Start build tree\n");
+	double t = Wtime();
 	BuildTree(depth);
+	printf("Time: %f\n", Wtime() - t);
+	printf("Finished build tree\n");
+	// VerifyTree();
+	exit(0);
 	ConstructManifold();
 
 	*out_V = MatrixD(vertices_.size(), 3);
@@ -32,9 +49,10 @@ void Manifold::ProcessManifold(const MatrixD& V, const MatrixI& F,
 	for (int i = 0; i < face_indices_.size(); ++i)
 		out_F->row(i) = face_indices_[i];
 
-	MeshProjector projector;
-	projector.Project(V_, F_, out_V, out_F);
+	// MeshProjector projector;
+	// projector.Project(V_, F_, out_V, out_F);
 }
+
 
 void Manifold::BuildTree(int depth)
 {
@@ -48,28 +66,28 @@ void Manifold::BuildTree(int depth)
 	tree_->BuildConnection();
 	tree_->BuildEmptyConnection();
 
-	std::list<Octree*> empty_list;
-	std::set<Octree*> empty_set;
-	for (int i = 0; i < 6; ++i)
-	{
-		tree_->ExpandEmpty(empty_list, empty_set, i);
-	}
+	// std::list<Octree*> empty_list;
+	// std::set<Octree*> empty_set;
+	// for (int i = 0; i < 6; ++i)
+	// {
+	// 	tree_->ExpandEmpty(empty_list, empty_set, i);
+	// }
 
-	while ((int)empty_list.size() > 0)
-	{
-		Octree* empty = empty_list.front();
-		empty->exterior_ = 1;
-		for (std::list<Octree*>::iterator it = empty->empty_neighbors_.begin();
-			it != empty->empty_neighbors_.end(); ++it)
-		{
-			if (empty_set.find(*it) == empty_set.end())
-			{
-				empty_list.push_back(*it);
-				empty_set.insert(*it);
-			}
-		}
-		empty_list.pop_front();
-	}
+	// while ((int)empty_list.size() > 0)
+	// {
+	// 	Octree* empty = empty_list.front();
+	// 	empty->exterior_ = 1;
+	// 	for (std::list<Octree*>::iterator it = empty->empty_neighbors_.begin();
+	// 		it != empty->empty_neighbors_.end(); ++it)
+	// 	{
+	// 		if (empty_set.find(*it) == empty_set.end())
+	// 		{
+	// 			empty_list.push_back(*it);
+	// 			empty_set.insert(*it);
+	// 		}
+	// 	}
+	// 	empty_list.pop_front();
+	// }
 }
 
 void Manifold::CalcBoundingBox()
@@ -113,10 +131,13 @@ void Manifold::ConstructManifold()
 	std::vector<Vector4i> nface_indices;
 	std::vector<Vector3i> triangles;
 	std::vector<std::set<int> > v_faces;
+	printf("Start construct face\n");
 	tree_->ConstructFace(Vector3i(0,0,0), &vcolor, &nvertices,
 		&nface_indices, &v_faces);
-
+	printf("Finished construct face\n");
+	printf("Start split grid\n");
 	SplitGrid(nface_indices, vcolor, nvertices, v_faces, triangles);
+	printf("Finished split grid\n");
 	std::vector<int> hash_v(nvertices.size(),0);
 	for (int i = 0; i < (int)triangles.size(); ++i)
 	{
