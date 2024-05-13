@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(Manifold)
 
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
