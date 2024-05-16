@@ -33,21 +33,19 @@ void Manifold::ProcessManifold(const MatrixD& V, const MatrixI& F,
 {
 	V_ = V;
 	F_ = F;
-	printf("Start build tree\n");
 	double t = Wtime();
 	BuildTree(depth);
-	printf("Time: %f\n", Wtime() - t);
-	printf("Finished build tree\n");
 	// VerifyTree();
-	exit(0);
-	ConstructManifold();
+	// exit(0);
 
-	*out_V = MatrixD(vertices_.size(), 3);
-	*out_F = MatrixI(face_indices_.size(), 3);
-	for (int i = 0; i < vertices_.size(); ++i)
-		out_V->row(i) = vertices_[i];
-	for (int i = 0; i < face_indices_.size(); ++i)
-		out_F->row(i) = face_indices_[i];
+	// ConstructManifold();
+
+	// *out_V = MatrixD(vertices_.size(), 3);
+	// *out_F = MatrixI(face_indices_.size(), 3);
+	// for (int i = 0; i < vertices_.size(); ++i)
+	// 	out_V->row(i) = vertices_[i];
+	// for (int i = 0; i < face_indices_.size(); ++i)
+	// 	out_F->row(i) = face_indices_[i];
 
 	// MeshProjector projector;
 	// projector.Project(V_, F_, out_V, out_F);
@@ -56,15 +54,34 @@ void Manifold::ProcessManifold(const MatrixD& V, const MatrixI& F,
 
 void Manifold::BuildTree(int depth)
 {
+	double t_total, t_bbox, t_split, t_conn, t_empty_conn;
+	t_total = Wtime();
+	t_bbox = Wtime();
 	CalcBoundingBox();
+	t_bbox = Wtime() - t_bbox;
+	
 	tree_ = new Octree(min_corner_, max_corner_, F_);
 
+	t_split = Wtime();
 	for (int iter = 0; iter < depth; ++iter) {
 		tree_->Split(V_);
 	}
-
+	t_split = Wtime() - t_split;
+	
+	t_conn = Wtime();
 	tree_->BuildConnection();
+	t_conn = Wtime() - t_conn;
+
+	t_empty_conn = Wtime();
 	tree_->BuildEmptyConnection();
+	t_empty_conn = Wtime() - t_empty_conn;
+
+	t_total = Wtime() - t_total;
+	printf("Total time: %f\n", t_total);
+	printf("Bounding box time: %f\n", t_bbox);
+	printf("Split time: %f\n", t_split);
+	printf("Connection time: %f\n", t_conn);
+	printf("Empty connection time: %f\n", t_empty_conn);
 
 	// std::list<Octree*> empty_list;
 	// std::set<Octree*> empty_set;
